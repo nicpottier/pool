@@ -13,7 +13,7 @@ rcssmin==1.0.6
 redis==2.10.5
 rjsmin==1.0.12
 six==1.10.0
--e git+git@github.com:nyaruka/smartmin.git@26b7a8980a4894faab9d4cf24ea3d2aefbfdfc1d#egg=smartmin
+-e git+https://github.com/nyaruka/smartmin.git@26b7a8980a4894faab9d4cf24ea3d2aefbfdfc1d#egg=smartmin
 whitenoise==3.2
 xlrd==1.0.0
 xlwt==1.1.2
