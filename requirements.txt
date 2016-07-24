@@ -1,3 +1,4 @@
+psycopg2==2.6.2
 amqp==1.4.9
 anyjson==0.3.3
 billiard==3.3.0.23
