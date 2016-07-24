@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Player Rankings</h3>
+    <table class="table table-striped" width="100%">
+        <tr>
+        <th>Name</th>
+        <th class="score">Games</th>
+        <th class="score">Points</th>
+        <th class="score">Wins</th>
+        <th class="score">Losses</th>
+        <th class="score">Average</th>
+        </tr>
+    {% for player in players %}
+        <tr>
+        <td>{{ player.name }}</td>
+        <td class="score">{{ player.games }}</td>
+        <td class="score">{{ player.points }}</td>
+        <td class="score">{{ player.wins }}</td>
+        <td class="score">{{ player.losses }}</td>
+        <td class="score">{{ player.avg|floatformat:2 }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+
+    {% for match in matches %}
+    <div class="match-container">
+    <div class="match-header">{{ match.team1 }} vs {{ match.team2 }} on {{ match.date }}</div>
+    <table class="match table" width="100%">
+        <tr>
+        <th colspan="2"></th>
+        <th class="match-team">{{ match.team1 }}</th>
+        <th class="match-team">{{ match.team2 }}</th>
+        </tr>
+        {% with match.summary as summary %}
+          {% for round in summary.rounds %}
+            {% for game in round.games %}
+            <tr class="round{{ round.round }}">
+            <td>{{ game.player1 }}</td>
+            <td>{{ game.player2 }}</td>
+            <td class="score">{{ game.score1 }}</td>
+            <td class="score">{{ game.score2 }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="round-total">
+                <td class="round-number" colspan="2">Round {{ round.round }}</td>
+                <td class="round-score score {% if round.win1 %}win{% endif %}">{{ round.score1 }}</td>
+                <td class="round-score score {% if round.win2 %}win{% endif %}">{{ round.score2 }}</td>
+            </tr>
+          {% endfor %}
+
+           <tr class="match-total">
+             <td class="score-label" colspan="2">Total</td>
+             <td class="score {% if summary.score1_win %}win{% endif %}">{{ summary.score1 }}</td>
+             <td class="score {% if summary.score2_win %}win{% endif %}">{{ summary.score2 }}</td>
+           </tr>
+           <tr class="match-total">
+             <td class="score-label" colspan="2">Points</td>
+             <td class="score {% if summary.win1 %}win{% endif %}">{{ summary.wins1 }}</td>
+             <td class="score {% if summary.win2 %}win{% endif %}">{{ summary.wins2 }}</td>
+           </tr>
+        {% endwith %}
+    </table>
+    </div>
+    {% endfor %}
+{% endblock %}
+
+{% block extra-style %}
+    {{ block.super }}
+    <style>
+      .match-container {
+          border: 1px solid #3c3c3c;
+          margin-top: 50px;
+          padding: 10px;
+      }
+
+      .match-header {
+          font-size: 150%;
+          font-weight: bold;
+          color: #666;
+      }
+
+      .round0 td, .round2 td, .round4 td {
+
+      }
+
+      .match th.match-team {
+          text-align: right;
+      }
+
+      td.score, th.score {
+          width: 150px;
+          text-align: right;
+      }
+
+      table.table tr.round-total td {
+          border-top: 2px solid #333;
+      }
+
+      .match td.round-score {
+
+      }
+
+      .match td.round-number {
+          font-weight: bold;
+          text-align: right;
+          padding-bottom: 20px;
+      }
+
+      .match-total td.score-label {
+          text-align: right;
+          font-weight: bold;
+      }
+
+      td.score.win{
+          color: #005A31;
+          font-weight: bold;
+      }
+    </style>
+{% endblock %}

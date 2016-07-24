@@ -39,6 +39,11 @@ INSTALLED_APPS = [
     # http://whitenoise.evans.io/en/stable/django.html#using-whitenoise-in-development
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+
+    'guardian',
+    'smartmin',
+    'smartmin.users',
+    'pool.league',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -57,8 +62,9 @@ ROOT_URLCONF = 'pool.urls'
 
 TEMPLATES = [
     {
+        'NAME': 'app_dirs',
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.static',
             ],
             'debug': DEBUG,
         },
@@ -100,6 +107,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend', 'guardian.backends.ObjectPermissionBackend')
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -133,3 +142,24 @@ STATICFILES_DIRS = [
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# create the smartmin CRUDL permissions on all objects
+PERMISSIONS = {
+  '*': ('create', # can create an object
+        'read',   # can read an object, viewing it's details
+        'update', # can update an object
+        'delete', # can delete an object,
+        'list'),  # can view a list of the objects
+}
+
+# assigns the permissions that each group should have, here creating an Administrator group with
+# authority to create and change users
+GROUP_PERMISSIONS = {
+    "Administrator": ('auth.user.*',)
+}
+
+# this is required by guardian
+ANONYMOUS_USER_ID = -1
+
+# set this if you want to use smartmin's user login
+LOGIN_URL = '/users/login'

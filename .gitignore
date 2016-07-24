@@ -6,6 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
+.idea
+pool/staticfiles
+*~
+*#
+
+db.sqlite3
+
 # Distribution / packaging
 .Python
 env/
