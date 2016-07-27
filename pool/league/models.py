@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from smartmin.models import SmartModel
 from django.db import models
-from django.db.models import Avg, Count, Sum
+from django.db.models import Avg, Sum, Q
 
 
 class Player(SmartModel):
@@ -29,6 +29,26 @@ class Player(SmartModel):
         avg = Player.objects.filter(scores__match__season=self.season, id=self.id).annotate(avg_pts=Avg('scores__score'))
         if avg:
             return avg[0].avg_pts
+        else:
+            return 0
+
+    def mvpg(self):
+        # get all the matches and games we played
+        our_scores = PlayerScore.objects.filter(match__season=self.season, player=self)
+
+        # build a list of the opposing query
+        q = Q(match_id__lt=0)
+        our_total = 0
+        for score in our_scores:
+            q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
+            our_total += score.score
+
+        their_total = 0
+        for score in PlayerScore.objects.filter(match__season=self.season).filter(q):
+            their_total += score.score
+
+        if len(our_scores):
+            return float(our_total - their_total) / len(our_scores)
         else:
             return 0
 
