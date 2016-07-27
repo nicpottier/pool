@@ -71,8 +71,19 @@ class Match(SmartModel):
         rounds = []
         match = dict(rounds=rounds, score1=0, score2=0, wins1=0, wins2=0)
 
-        for game_num in range(1, 26):
-            if (game_num - 1) % 5 == 0:
+        # are we 16 games or 25?
+        last_game = PlayerScore.objects.filter(match=self).order_by('-game').first()
+        games = 25
+        if last_game:
+            games = last_game.game
+
+        if games == 16:
+            num_rounds = 4
+        else:
+            num_rounds = 5
+
+        for game_num in range(1, games+1):
+            if (game_num - 1) % num_rounds == 0:
                 games = []
                 round = dict(games=games, round=len(rounds)+1, score1=0, score2=0)
                 rounds.append(round)
@@ -86,7 +97,7 @@ class Match(SmartModel):
                 match['score1'] += p1_score.score
                 match['score2'] += p2_score.score
 
-                games.append(dict(game=game_num, round=(game_num-1) / 5,
+                games.append(dict(game=game_num, round=(game_num-1) / num_rounds,
                                   player1=p1_score.player, score1=p1_score.score,
                                   player2=p2_score.player, score2=p2_score.score))
 
