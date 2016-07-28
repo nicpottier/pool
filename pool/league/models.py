@@ -32,7 +32,7 @@ class Player(SmartModel):
         else:
             return 0
 
-    def mvpg(self):
+    def mpg(self):
         # get all the matches and games we played
         our_scores = PlayerScore.objects.filter(match__season=self.season, player=self)
 

@@ -10,7 +10,7 @@
         <th class="score">Wins</th>
         <th class="score">Losses</th>
         <th class="score">Average</th>
-        <th class="score">MVPG</th>
+        <th class="score">MPG</th>
         </tr>
     {% for player in players %}
         <tr>
@@ -20,7 +20,7 @@
         <td class="score">{{ player.wins }}</td>
         <td class="score">{{ player.losses }}</td>
         <td class="score">{{ player.avg|floatformat:2 }}</td>
-        <td class="score">{{ player.mvpg|floatformat:2 }}</td>
+        <td class="score">{{ player.mpg|floatformat:2 }}</td>
         </tr>
     {% endfor %}
     </table>
