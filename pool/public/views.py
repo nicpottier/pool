@@ -11,7 +11,7 @@ def index(request):
     for player in players:
         player.set_season(season)
 
-    players = sorted(players, key=lambda p: p.avg(), reverse=True)
+    players = sorted(players, key=lambda p: p.avg, reverse=True)
     matches = Match.objects.filter(season=season).order_by('date')
 
     context = dict(season=season, players=players, matches=matches)

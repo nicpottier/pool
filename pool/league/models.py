@@ -12,45 +12,41 @@ class Player(SmartModel):
     def set_season(self, season):
         self.season = season
 
-    def wins(self):
-        return PlayerScore.objects.filter(match__season=self.season, player=self, score=10).count()
+        self.wins = PlayerScore.objects.filter(match__season=self.season, player=self, score=10).count()
+        self.losses = PlayerScore.objects.filter(match__season=self.season, player=self, score__lt=10).count()
 
-    def losses(self):
-        return PlayerScore.objects.filter(match__season=self.season, player=self, score__lt=10).count()
+        self.games = PlayerScore.objects.filter(match__season=self.season, player=self).count()
 
-    def points(self):
         sum = Player.objects.filter(scores__match__season=self.season, id=self.id).annotate(total_pts=Sum('scores__score'))
         if sum:
-            return sum[0].total_pts
+            self.points = sum[0].total_pts
         else:
-            return 0
+            self.points = 0
 
-    def avg(self):
         avg = Player.objects.filter(scores__match__season=self.season, id=self.id).annotate(avg_pts=Avg('scores__score'))
         if avg:
-            return avg[0].avg_pts
+            self.avg = avg[0].avg_pts
         else:
-            return 0
+            self.avg = 0
 
-    def mpg(self):
         # get all the matches and games we played
         our_scores = PlayerScore.objects.filter(match__season=self.season, player=self)
 
         # build a list of the opposing query
         q = Q(match_id__lt=0)
-        our_total = 0
         for score in our_scores:
             q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
-            our_total += score.score
 
         their_total = 0
         for score in PlayerScore.objects.filter(match__season=self.season).filter(q):
             their_total += score.score
 
-        if len(our_scores):
-            return float(our_total - their_total) / len(our_scores)
+        self.opponent_points = their_total
+
+        if self.games:
+            self.mpg = float(self.points - self.opponent_points) / self.games
         else:
-            return 0
+            self.mpg = 0
 
     def games(self):
         return PlayerScore.objects.filter(match__season=self.season, player=self).count()
