@@ -1,6 +1,28 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h3>Team Rankings</h3>
+    <table class="table table-striped" width="100%">
+        <tr>
+        <th>Team</th>
+        <th class="score">Games</th>
+        <th class="score">Wins</th>
+        <th class="score">Losses</th>
+        <th class="score">Points</th>
+        </tr>
+    {% for team in teams %}
+        <tr>
+        <td>{{ team.name }}</td>
+        <td class="score">{{ team.games }}</td>
+        <td class="score">{{ team.wins }}</td>
+        <td class="score">{{ team.losses }}</td>
+        <td class="score">{{ team.points }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+
+
+
 <h3>Player Rankings</h3>
     <table class="table table-striped" width="100%">
         <tr>
@@ -29,7 +51,7 @@
 
     {% for match in matches %}
     <div class="match-container">
-    <div class="match-header">{{ match.team1 }} vs {{ match.team2 }} on {{ match.date }}</div>
+    <div class="match-header">{{ match.team1 }} {% if match.handicap1 %}(+{{ match.handicap1 }}){% endif %} vs {{ match.team2 }} {% if match.handicap2 %}(+{{ match.handicap2 }}){% endif %} on {{ match.date }}</div>
     <table class="match table" width="100%">
         <tr>
         <th colspan="2"></th>
@@ -46,10 +68,15 @@
             <td class="score">{{ game.score2 }}</td>
             </tr>
             {% endfor %}
-            <tr class="round-total">
+            <tr class="round-handicap">
                 <td class="round-number" colspan="2">Round {{ round.round }}</td>
-                <td class="round-score score {% if round.win1 %}win{% endif %}">{{ round.score1 }}</td>
-                <td class="round-score score {% if round.win2 %}win{% endif %}">{{ round.score2 }}</td>
+                <td class="round-score score">{{ round.score1 }}</td>
+                <td class="round-score score">{{ round.score2 }}</td>
+            </tr>
+            <tr class="round-total">
+                <td class="round-number" colspan="2">Round {{ round.round }} with Handicap</td>
+                <td class="round-score score {% if round.win1 %}win{% endif %}">{{ round.hscore1 }}</td>
+                <td class="round-score score {% if round.win2 %}win{% endif %}">{{ round.hscore2 }}</td>
             </tr>
           {% endfor %}
 
@@ -60,8 +87,8 @@
            </tr>
            <tr class="match-total">
              <td class="score-label" colspan="2">Points</td>
-             <td class="score {% if summary.win1 %}win{% endif %}">{{ summary.wins1 }}</td>
-             <td class="score {% if summary.win2 %}win{% endif %}">{{ summary.wins2 }}</td>
+             <td class="score {% if summary.win1 %}win{% endif %}">{{ summary.points1 }}</td>
+             <td class="score {% if summary.win2 %}win{% endif %}">{{ summary.points2 }}</td>
            </tr>
         {% endwith %}
     </table>

@@ -140,6 +140,15 @@ class MatchCRUDL(SmartCRUDL):
                     PlayerScore.objects.create(team=team2, player=p2, score=p2_score, match=match, game=game,
                                                created_by=self.request.user, modified_by=self.request.user)
 
+            # calculate handicaps
+            match.calculate_handicaps()
+
+            # calculate wins
+            summary = match.summary()
+            match.points1 = summary['points1']
+            match.points2 = summary['points2']
+            match.save()
+
             return HttpResponseRedirect('/')
 
     class Batch4(SmartFormView):
@@ -227,6 +236,15 @@ class MatchCRUDL(SmartCRUDL):
                                                created_by=self.request.user, modified_by=self.request.user)
                     PlayerScore.objects.create(team=team2, player=p2, score=p2_score, match=match, game=game,
                                                created_by=self.request.user, modified_by=self.request.user)
+
+            # calculate handicaps
+            match.calculate_handicaps()
+
+            # calculate wins
+            summary = match.summary()
+            match.points1 = summary['points1']
+            match.points2 = summary['points2']
+            match.save()
 
             return HttpResponseRedirect('/')
 
