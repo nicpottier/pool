@@ -65,6 +65,7 @@ class Player(SmartModel):
         ordering = ('name',)
 
 
+
 class Season(SmartModel):
     name = models.CharField(max_length=128,
                             help_text="Season Name")
@@ -231,6 +232,12 @@ class Match(SmartModel):
         match['handicap2'] = self.handicap2
 
         return match
+
+    def __unicode__(self):
+        return "%s vs %s on %s" % (str(self.team1), str(self.team2), str(self.date))
+
+    class Meta:
+        verbose_name_plural = "Matches"
 
 
 class PlayerScore(SmartModel):

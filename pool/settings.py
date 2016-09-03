@@ -29,20 +29,18 @@ DEBUG = True
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    #'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # Disable Django's own staticfiles handling in favour of WhiteNoise, for
-    # greater consistency between gunicorn and `./manage.py runserver`. See:
-    # http://whitenoise.evans.io/en/stable/django.html#using-whitenoise-in-development
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
 
     'guardian',
     'smartmin',
     'smartmin.users',
+
     'pool.league',
 ]
 
@@ -153,16 +151,26 @@ PERMISSIONS = {
         'update', # can update an object
         'delete', # can delete an object,
         'list'),  # can view a list of the objects
+
+  'league.match': ('batch4', 'batch5'),
+  'auth.user': ('profile',),
 }
 
 # assigns the permissions that each group should have, here creating an Administrator group with
 # authority to create and change users
 GROUP_PERMISSIONS = {
-    "Administrator": ('auth.user.*',)
+    "Administrator": ('auth.user.*',),
+    "Editors": ('league.match.*',
+                'league.player.*',
+                'league.team.*',
+                'league.season.*',
+                'auth.user_profile')
+
 }
 
 # this is required by guardian
 ANONYMOUS_USER_ID = -1
 
 # set this if you want to use smartmin's user login
-LOGIN_URL = '/users/login'
+LOGIN_URL = '/users/login/'
+LOGIN_REDIRECT_URL = '/match/'

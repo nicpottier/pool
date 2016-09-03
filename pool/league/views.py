@@ -27,11 +27,15 @@ class PlayerCRUDL(SmartCRUDL):
 
 
 class MatchCRUDL(SmartCRUDL):
-    actions = ('create', 'list', 'update', 'batch5', 'batch4')
+    actions = ('list', 'update', 'batch5', 'batch4', 'delete')
     model = Match
 
     class List(SmartListView):
-        fields = ('season', 'player1', 'player1_score', 'player2', 'player2_score', 'date')
+        fields = ('season', 'date', 'team1', 'team2')
+
+    class Update(SmartUpdateView):
+        fields = ('season', 'date', 'team1', 'team2')
+        delete_url = 'id@league.match_delete'
 
     class Batch5(SmartFormView):
         class BatchForm(forms.Form):
