@@ -233,9 +233,8 @@ class MatchCRUDL(SmartCRUDL):
                 p1_score = form.cleaned_data['g%02d_p1' % game]
                 p2_score = form.cleaned_data['g%02d_p2' % game]
 
-                print "[%02d] %d: %s - %d: %s" % (game, p1_idx, str(p1_score), p2_idx, str(p2_score))
-
-                if p1 and p2:
+                if p1 and p2 and (p1_score or p2_score):
+                    print "[%02d] %d: %s - %d: %s" % (game, p1_idx, str(p1_score), p2_idx, str(p2_score))
                     PlayerScore.objects.create(team=team1, player=p1, score=p1_score, match=match, game=game,
                                                created_by=self.request.user, modified_by=self.request.user)
                     PlayerScore.objects.create(team=team2, player=p2, score=p2_score, match=match, game=game,
