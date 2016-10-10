@@ -144,14 +144,8 @@ class MatchCRUDL(SmartCRUDL):
                     PlayerScore.objects.create(team=team2, player=p2, score=p2_score, match=match, game=game,
                                                created_by=self.request.user, modified_by=self.request.user)
 
-            # calculate handicaps
-            match.calculate_handicaps()
-
-            # calculate wins
-            summary = match.summary()
-            match.points1 = summary['points1']
-            match.points2 = summary['points2']
-            match.save()
+            # calculate our stats
+            match.calculate_stats()
 
             return HttpResponseRedirect('/')
 
@@ -241,13 +235,7 @@ class MatchCRUDL(SmartCRUDL):
                                                created_by=self.request.user, modified_by=self.request.user)
 
             # calculate handicaps
-            match.calculate_handicaps()
-
-            # calculate wins
-            summary = match.summary()
-            match.points1 = summary['points1']
-            match.points2 = summary['points2']
-            match.save()
+            match.calculate_stats()
 
             return HttpResponseRedirect('/')
 

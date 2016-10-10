@@ -9,51 +9,46 @@ class Player(SmartModel):
     name = models.CharField(max_length=128,
                             help_text="The player's name")
 
-    def avg(self, season, before_date):
-        avg = Player.objects.filter(scores__match__season=season, scores__match__date__lt=before_date, id=self.id).annotate(avg_pts=Avg('scores__score'))
-        if avg:
-            return avg[0].avg_pts
+    def avg_17(self, before_date):
+        last_24 = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:24])
+
+        # less than 4 games? default to average
+        if len(last_24) < 4:
+            return 10
         else:
-            return None
+            q = Q(match_id__lt=0)
+            for score in last_24:
+                q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
+
+            last_24_opp = list(PlayerScore.objects.filter(q))
+
+            points = sum([ps.score for ps in last_24])
+            opp_balls_left = sum([7 - ps.score if ps.score < 10 else 0 for ps in last_24_opp])
+            return float(points + opp_balls_left) / len(last_24)
 
     def set_season(self, season):
         self.season = season
 
-        self.wins = PlayerScore.objects.filter(match__season=self.season, player=self, score=10).count()
-        self.losses = PlayerScore.objects.filter(match__season=self.season, player=self, score__lt=10).count()
+        # get last 24 games
+        last_24 = list(PlayerScore.objects.filter(player=self).order_by('-match__date')[:24])
 
-        self.games = PlayerScore.objects.filter(match__season=self.season, player=self).count()
+        self.wins = sum([1 if ps.score == 10 else 0 for ps in last_24])
+        self.losses = sum([1 if ps.score < 10 else 0 for ps in last_24])
 
-        sum = Player.objects.filter(scores__match__season=self.season, id=self.id).annotate(total_pts=Sum('scores__score'))
-        if sum:
-            self.points = sum[0].total_pts
-        else:
-            self.points = 0
+        self.games = len(last_24)
+        self.points = sum([ps.score for ps in last_24])
 
-        avg = Player.objects.filter(scores__match__season=self.season, id=self.id).annotate(avg_pts=Avg('scores__score'))
-        if avg:
-            self.avg = avg[0].avg_pts
-        else:
-            self.avg = 0
+        self.avg = float(self.points) / self.games if self.games > 0 else 0
 
-        # get all the matches and games we played
-        our_scores = PlayerScore.objects.filter(match__season=self.season, player=self)
-
-        # build a list of the opposing query
         q = Q(match_id__lt=0)
-        for score in our_scores:
+        for score in last_24:
             q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
 
-        their_total = 0
-        for score in PlayerScore.objects.filter(match__season=self.season).filter(q):
-            their_total += score.score
+        last_24_opp = list(PlayerScore.objects.filter(q))
 
-        self.opponent_points = their_total
-
-        if self.games:
-            self.mpg = float(self.points - self.opponent_points) / self.games
-        else:
-            self.mpg = 0
+        self.opponent_points = sum([ps.score for ps in last_24_opp])
+        self.opp_balls_left = sum([7 - ps.score if ps.score < 10 else 0 for ps in last_24_opp])
+        self.avg_17 = float(self.points + self.opp_balls_left) / self.games if self.games > 0 else 0
 
     def games(self):
         return PlayerScore.objects.filter(match__season=self.season, player=self).count()
@@ -134,12 +129,8 @@ class Match(SmartModel):
     def sum_for_players(self, players):
         player_sum = 0
         for player in players:
-            player_avg = player.avg(self.season, self.date)
-            if player_avg is None:
-                player_avg = 7
-
+            player_avg = player.avg_17(self.date)
             print "%s: %f" % (player.name, player_avg)
-
             player_sum += player_avg
 
         return player_sum
@@ -232,6 +223,16 @@ class Match(SmartModel):
         match['handicap2'] = self.handicap2
 
         return match
+
+    def calculate_stats(self):
+        # calculate handicaps
+        self.calculate_handicaps()
+
+        # calculate wins
+        summary = self.summary()
+        self.points1 = summary['points1']
+        self.points2 = summary['points2']
+        self.save()
 
     def __unicode__(self):
         return "%s vs %s on %s" % (str(self.team1), str(self.team2), str(self.date))
