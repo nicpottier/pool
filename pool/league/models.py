@@ -9,6 +9,15 @@ class Player(SmartModel):
     name = models.CharField(max_length=128,
                             help_text="The player's name")
 
+    def avg(self, before_date):
+        last_24 = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:24])
+
+        # less than 4 games? default to average
+        if len(last_24) < 4:
+            return 7
+        else:
+            return float(sum([ps.score for ps in last_24])) / len(last_24)
+
     def avg_17(self, before_date):
         last_24 = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:24])
 
@@ -129,7 +138,7 @@ class Match(SmartModel):
     def sum_for_players(self, players):
         player_sum = 0
         for player in players:
-            player_avg = player.avg_17(self.date)
+            player_avg = player.avg(self.date)
             print "%s: %f" % (player.name, player_avg)
             player_sum += player_avg
 
