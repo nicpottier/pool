@@ -9,6 +9,58 @@ class Player(SmartModel):
     name = models.CharField(max_length=128,
                             help_text="The player's name")
 
+    def get_games(self):
+        scores = list(PlayerScore.objects.filter(player=self).order_by('-match__date'))
+
+        # create a dict of match / game to score
+        match_games = dict()
+        for score in scores:
+            match_games['%d_%d' % (score.match_id, score.game)] = [score]
+
+        q = Q(match_id__lt=0)
+        for score in scores:
+            q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
+
+        for opp_score in PlayerScore.objects.filter(q):
+            match_games['%d_%d' % (opp_score.match_id, opp_score.game)].append(opp_score)
+
+        games = []
+        for score in scores:
+            opp_score = match_games['%d_%d' % (score.match_id, score.game)][1]
+            games.append(dict(date=score.match.date, score=score.score, opponent=opp_score.player.name, opp_score=opp_score.score))
+
+        return games
+
+    def get_week_averages(self):
+        scores = list(PlayerScore.objects.filter(player=self).order_by('match__date'))
+
+        weeks = list()
+        current_week = dict()
+
+        for score in scores:
+            if not current_week or score.match.date != current_week['date']:
+                if current_week:
+                    current_week['avg'] = float(current_week['total']) / current_week['games']
+                    weeks.append(current_week)
+
+                current_week = dict(date=score.match.date, total=score.score, games=1)
+
+            else:
+                current_week['total'] += score.score
+                current_week['games'] += 1
+
+        if current_week:
+            current_week['avg'] = float(current_week['total']) / current_week['games']
+            weeks.append(current_week)
+
+        # now build the 6 week avg for each week
+        for i in range(len(weeks)):
+            game_count = sum(w['games'] for w in weeks[max(0, i-6):i+1])
+            game_total = sum(w['total'] for w in weeks[max(0, i-6):i+1])
+            weeks[i]['running_avg'] = game_total / float(game_count)
+
+        return weeks
+
     def avg(self, before_date):
         last_24 = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:24])
 
@@ -56,8 +108,7 @@ class Player(SmartModel):
         last_24_opp = list(PlayerScore.objects.filter(q))
 
         self.opponent_points = sum([ps.score for ps in last_24_opp])
-        self.opp_balls_left = sum([7 - ps.score if ps.score < 10 else 0 for ps in last_24_opp])
-        self.avg_17 = float(self.points + self.opp_balls_left) / self.games if self.games > 0 else 0
+        self.mpg = float(self.points - self.opponent_points) / self.games if self.games > 0 else 0
 
     def games(self):
         return PlayerScore.objects.filter(match__season=self.season, player=self).count()

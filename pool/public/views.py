@@ -17,3 +17,10 @@ def index(request):
 
     context = dict(season=season, players=players, matches=matches, teams=teams)
     return render(request, 'index.html', context)
+
+def player(request, player_id):
+    player = Player.objects.get(id=player_id)
+
+    context = dict(player=player, games=player.get_games(), weeks=player.get_week_averages())
+    return render(request, 'player.html', context)
+

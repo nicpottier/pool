@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ player.name }}</h2>
+
+<canvas id="performance" width="800" height="200"></canvas>
+
+<h3>Games</h3>
+<table class="table">
+  {% for game in games %}
+  <tr>
+  <td>{{ game.date }}</td>
+  <td>{{ game.opponent }}</td>
+  <td>{{ game.score }} - {{ game.opp_score }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
+
+{% block extra-script %}
+{{ block.super }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.bundle.min.js"></script>
+<script>
+    var ctx = document.getElementById("performance");
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for week in weeks %}"{{ week.date }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: "Week Avg",
+                lineTension: .1,
+                borderColor: "rgba(255,99,132,1)",
+                fill: false,
+                data: [{% for week in weeks %}{{ week.avg }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            },{
+                label: "6 Week Avg",
+                lineTension: .1,
+                borderColor: "rgba(75,192,192,1)",
+                fill: false,
+                data: [{% for week in weeks %}{{ week.running_avg }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            }]
+        },
+        options: {
+            legend: {
+                display: true
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true,
+                        max: 10,
+                        min: 4
+                    }
+                }]
+            }
+        }
+    });
+</script>
+{% endblock %}
