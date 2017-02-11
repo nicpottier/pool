@@ -3,8 +3,9 @@
 
 {% block table-buttons %}
 {{ block.super }}
-    <a class="btn btn-primary pull-right" href="{% url 'league.match_batch4' %}">{% trans "Batch4" %}</a>
-    <a class="btn btn-primary pull-right" href="{% url 'league.match_batch5' %}">{% trans "Batch5" %}</a>
+    <a class="btn btn-primary pull-right" href="{% url 'league.match_batch3' %}?season={{ season.id }}">{% trans "Batch3" %}</a>
+    <a class="btn btn-primary pull-right" href="{% url 'league.match_batch4' %}?season={{ season.id }}">{% trans "Batch4" %}</a>
+    <a class="btn btn-primary pull-right" href="{% url 'league.match_batch5' %}?season={{ season.id }}">{% trans "Batch5" %}</a>
 {% endblock %}
 
 {% block extra-style %}

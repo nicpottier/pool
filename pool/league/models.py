@@ -221,10 +221,14 @@ class Match(SmartModel):
         if last_game:
             games = last_game.game
 
-        if games == 16:
+        if games == 9:
+            num_rounds = 3
+        elif games == 16:
             num_rounds = 4
-        else:
+        elif games == 24:
             num_rounds = 5
+        else:
+            raise Exception("unknown number of games")
 
         for game_num in range(1, games+1):
             if (game_num - 1) % num_rounds == 0:

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form action="" method="POST">
+    <table class="table table-striped" width="100%">
+      <tr class="season">
+          <td colspan="1">Season</td><td colspan="3">{{ form.season }}</td>
+          <td colspan="1">Date</td><td colspan="3" class="datepicker">{{ form.date }}</td>
+      </tr>
+      <tr class="teams">
+          <td colspan="1">Home Team</td><td colspan="3">{{ form.team1 }}</td>
+          <td colspan="1">Visiting Team</td><td colspan="3">{{ form.team2 }}</td>
+      </tr>
+      <tr>
+          <th>Player</th><th>1</th><th>2</th><th>3</th>
+          <th>Player</th><th>1</th><th>2</th><th>3</th>
+      </tr>
+      <tr class="round">
+          <td>{{ form.player1 }}</td><td>{{ form.g01_p1 }}</td><td>{{ form.g04_p1 }}</td><td>{{ form.g07_p1 }}</td>
+          <td>{{ form.player4 }}</td><td>{{ form.g01_p2 }}</td><td>{{ form.g06_p2 }}</td><td>{{ form.g08_p2 }}</td>
+      </tr>
+      <tr class="round">
+          <td>{{ form.player2 }}</td><td>{{ form.g02_p1 }}</td><td>{{ form.g05_p1 }}</td><td>{{ form.g08_p1 }}</td>
+          <td>{{ form.player5 }}</td><td>{{ form.g02_p2 }}</td><td>{{ form.g04_p2 }}</td><td>{{ form.g09_p2 }}</td>
+      </tr>
+      <tr class="round">
+          <td>{{ form.player3 }}</td><td>{{ form.g03_p1 }}</td><td>{{ form.g06_p1 }}</td><td>{{ form.g09_p1 }}</td>
+          <td>{{ form.player6 }}</td><td>{{ form.g03_p2 }}</td><td>{{ form.g05_p2 }}</td><td>{{ form.g07_p2 }}</td>
+      </tr>
+    </table>
+    {% csrf_token %}
+    {% for error in form.errors %}
+        {{ error }}
+    {% endfor %}
+    <input type="submit" value="Submit" />
+    </form>
+{% endblock %}
+
+{% block extra-style %}
+{{ block.super }}
+<style>
+  .round td input {
+      width:30px;
+  }
+
+  .round td select, .season td select, .teams td select {
+      width: 200px;
+  }
+
+  .datepicker input {
+      width: 200px;
+  }
+
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+  }
+</style>
+{% endblock %}

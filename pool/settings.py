@@ -152,7 +152,7 @@ PERMISSIONS = {
         'delete', # can delete an object,
         'list'),  # can view a list of the objects
 
-  'league.match': ('batch4', 'batch5'),
+  'league.match': ('batch3', 'batch4', 'batch5'),
   'auth.user': ('profile',),
 }
 

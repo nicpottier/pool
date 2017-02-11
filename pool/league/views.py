@@ -27,11 +27,16 @@ class PlayerCRUDL(SmartCRUDL):
 
 
 class MatchCRUDL(SmartCRUDL):
-    actions = ('list', 'update', 'batch5', 'batch4', 'delete')
+    actions = ('list', 'update', 'batch3', 'batch4', 'batch5', 'delete')
     model = Match
 
     class List(SmartListView):
         fields = ('season', 'date', 'team1', 'team2')
+
+        def get_context_data(self, **kwargs):
+            context = super(MatchCRUDL.List, self).get_context_data(**kwargs)
+            context['season'] = Season.objects.filter(is_active=True).order_by('-pk').first()
+            return context
 
     class Update(SmartUpdateView):
         fields = ('season', 'date', 'team1', 'team2')
@@ -39,6 +44,13 @@ class MatchCRUDL(SmartCRUDL):
 
     class Batch5(SmartFormView):
         class BatchForm(forms.Form):
+            def __init__(self, season, **kwargs):
+                super(MatchCRUDL.Batch5.BatchForm, self).__init__(**kwargs)
+                if season:
+                    self.fields['season'].queryset = Season.objects.filter(id=season.id)
+                    self.fields['team1'].queryset = Team.objects.filter(season=season)
+                    self.fields['team2'].queryset = Team.objects.filter(season=season)
+
             date = forms.DateField()
             season = forms.ModelChoiceField(Season.objects.all())
             team1 = forms.ModelChoiceField(Team.objects.all())
@@ -112,6 +124,16 @@ class MatchCRUDL(SmartCRUDL):
 
         form_class = BatchForm
 
+        def get_form_kwargs(self):
+            kwargs = super(MatchCRUDL.Batch5, self).get_form_kwargs()
+
+            season_id = self.request.GET.get('season')
+            if season_id:
+                kwargs['season'] = Season.objects.get(id=season_id)
+            else:
+                kwargs['season'] = None
+            return kwargs
+
         def form_valid(self, form):
             # create all our match objects
             season = form.cleaned_data['season']
@@ -151,6 +173,13 @@ class MatchCRUDL(SmartCRUDL):
 
     class Batch4(SmartFormView):
         class BatchForm(forms.Form):
+            def __init__(self, season, **kwargs):
+                super(MatchCRUDL.Batch4.BatchForm, self).__init__(**kwargs)
+                if season:
+                    self.fields['season'].queryset = Season.objects.filter(id=season.id)
+                    self.fields['team1'].queryset = Team.objects.filter(season=season)
+                    self.fields['team2'].queryset = Team.objects.filter(season=season)
+
             date = forms.DateField()
             season = forms.ModelChoiceField(Season.objects.all())
             team1 = forms.ModelChoiceField(Team.objects.all())
@@ -203,6 +232,16 @@ class MatchCRUDL(SmartCRUDL):
 
         form_class = BatchForm
 
+        def get_form_kwargs(self):
+            kwargs = super(MatchCRUDL.Batch4, self).get_form_kwargs()
+
+            season_id = self.request.GET.get('season')
+            if season_id:
+                kwargs['season'] = Season.objects.get(id=season_id)
+            else:
+                kwargs['season'] = None
+            return kwargs
+
         def form_valid(self, form):
             # create all our match objects
             season = form.cleaned_data['season']
@@ -220,6 +259,96 @@ class MatchCRUDL(SmartCRUDL):
                 p2_idx = p1_idx + 4 + round_offset
                 if p2_idx > 8:
                     p2_idx -= 4
+
+                p1 = form.cleaned_data['player%d' % p1_idx]
+                p2 = form.cleaned_data['player%d' % p2_idx]
+
+                p1_score = form.cleaned_data['g%02d_p1' % game]
+                p2_score = form.cleaned_data['g%02d_p2' % game]
+
+                if p1 and p2 and (p1_score or p2_score):
+                    print "[%02d] %d: %s - %d: %s" % (game, p1_idx, str(p1_score), p2_idx, str(p2_score))
+                    PlayerScore.objects.create(team=team1, player=p1, score=p1_score, match=match, game=game,
+                                               created_by=self.request.user, modified_by=self.request.user)
+                    PlayerScore.objects.create(team=team2, player=p2, score=p2_score, match=match, game=game,
+                                               created_by=self.request.user, modified_by=self.request.user)
+
+            # calculate handicaps
+            match.calculate_stats()
+
+            return HttpResponseRedirect('/')
+
+    class Batch3(SmartFormView):
+        class BatchForm(forms.Form):
+            def __init__(self, season, **kwargs):
+                super(MatchCRUDL.Batch3.BatchForm, self).__init__(**kwargs)
+                if season:
+                    self.fields['season'].queryset = Season.objects.filter(id=season.id)
+                    self.fields['team1'].queryset = Team.objects.filter(season=season)
+                    self.fields['team2'].queryset = Team.objects.filter(season=season)
+
+            date = forms.DateField()
+            season = forms.ModelChoiceField(Season.objects.all())
+            team1 = forms.ModelChoiceField(Team.objects.all())
+            team2 = forms.ModelChoiceField(Team.objects.all())
+
+            player1 = forms.ModelChoiceField(Player.objects.all())
+            player2 = forms.ModelChoiceField(Player.objects.all())
+            player3 = forms.ModelChoiceField(Player.objects.all())
+            player4 = forms.ModelChoiceField(Player.objects.all())
+            player5 = forms.ModelChoiceField(Player.objects.all())
+            player6 = forms.ModelChoiceField(Player.objects.all())
+
+            g01_p1 = forms.IntegerField()
+            g01_p2 = forms.IntegerField()
+            g02_p1 = forms.IntegerField()
+            g02_p2 = forms.IntegerField()
+            g03_p1 = forms.IntegerField()
+            g03_p2 = forms.IntegerField()
+
+            g04_p1 = forms.IntegerField()
+            g04_p2 = forms.IntegerField()
+            g05_p1 = forms.IntegerField()
+            g05_p2 = forms.IntegerField()
+            g06_p1 = forms.IntegerField()
+            g06_p2 = forms.IntegerField()
+
+            g07_p1 = forms.IntegerField()
+            g07_p2 = forms.IntegerField()
+            g08_p1 = forms.IntegerField()
+            g08_p2 = forms.IntegerField()
+            g09_p1 = forms.IntegerField()
+            g09_p2 = forms.IntegerField()
+
+        form_class = BatchForm
+
+        def get_form_kwargs(self):
+            kwargs = super(MatchCRUDL.Batch3, self).get_form_kwargs()
+
+            season_id = self.request.GET.get('season')
+            if season_id:
+                kwargs['season'] = Season.objects.get(id=season_id)
+            else:
+                kwargs['season'] = None
+            return kwargs
+
+        def form_valid(self, form):
+            # create all our match objects
+            season = form.cleaned_data['season']
+            date = form.cleaned_data['date']
+            team1 = form.cleaned_data['team1']
+            team2 = form.cleaned_data['team2']
+
+            match = Match.objects.create(season=season, date=date, team1=team1, team2=team2,
+                                         created_by=self.request.user, modified_by=self.request.user)
+
+            for game in range(1, 10):
+                round_offset = (game - 1) / 3
+
+                p1_idx = ((game - 1) % 3) + 1
+                p2_idx = p1_idx + 3 + round_offset
+                if p2_idx > 6:
+                    p2_idx -= 3
 
                 p1 = form.cleaned_data['player%d' % p1_idx]
                 p2 = form.cleaned_data['player%d' % p2_idx]
