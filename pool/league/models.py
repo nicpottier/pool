@@ -70,24 +70,17 @@ class Player(SmartModel):
         if len(last) < 6:
             return 7
         else:
-            return float(sum([ps.score for ps in last])) / len(last)
+            # build up our scores and sort them
+            scores = [ps.score for ps in last]
+            scores.sort()
 
-    def avg_17(self, before_date):
-        last = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:AVG_GAMES])
+            # figure out our quartile size
+            quartile = last.count() / 4
 
-        # less than 4 games? default to average
-        if len(last) < 4:
-            return 10
-        else:
-            q = Q(match_id__lt=0)
-            for score in last:
-                q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
+            # strip off the top and bottom quartile
+            scores = scores[quartile:-quartile]
 
-            last_opp = list(PlayerScore.objects.filter(q))
-
-            points = sum([ps.score for ps in last])
-            opp_balls_left = sum([7 - ps.score if ps.score < 10 else 0 for ps in last_opp])
-            return float(points + opp_balls_left) / len(last)
+            return float(sum(scores)) / len(scores)
 
     def set_season(self, season):
         self.season = season
@@ -101,7 +94,16 @@ class Player(SmartModel):
         self.games = len(last)
         self.points = sum([ps.score for ps in last])
 
-        self.avg = float(self.points) / self.games if self.games > 0 else 0
+        # build up our scores and sort them
+        scores = [ps.score for ps in last]
+        scores.sort()
+
+        # figure out our quartile size
+        quartile = len(scores) / 4 if len(scores) > 0 else 0
+
+        # strip off the top and bottom quartile
+        scores = scores[quartile:-quartile]
+        self.avg = float(sum(scores)) / len(scores) if self.games > 0 else 0
 
         q = Q(match_id__lt=0)
         for score in last:
