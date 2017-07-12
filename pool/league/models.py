@@ -71,8 +71,7 @@ class Player(SmartModel):
             return 7
         else:
             # build up our scores and sort them
-            scores = [ps.score for ps in last]
-            scores.sort()
+            scores = sorted([ps.score for ps in last])
 
             # figure out our quartile size
             quartile = last.count() / 4
@@ -95,8 +94,7 @@ class Player(SmartModel):
         self.points = sum([ps.score for ps in last])
 
         # build up our scores and sort them
-        scores = [ps.score for ps in last]
-        scores.sort()
+        scores = sorted([ps.score for ps in last])
 
         # figure out our quartile size
         quartile = len(scores) / 4 if len(scores) > 0 else 0
