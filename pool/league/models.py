@@ -4,6 +4,8 @@ from smartmin.models import SmartModel
 from django.db import models
 from django.db.models import Avg, Sum, Q
 
+WEEK_AVG = 8
+AVG_GAMES = 48
 
 class Player(SmartModel):
     name = models.CharField(max_length=128,
@@ -53,61 +55,61 @@ class Player(SmartModel):
             current_week['avg'] = float(current_week['total']) / current_week['games']
             weeks.append(current_week)
 
-        # now build the 6 week avg for each week
+        # now build the week avg for each week
         for i in range(len(weeks)):
-            game_count = sum(w['games'] for w in weeks[max(0, i-6):i+1])
-            game_total = sum(w['total'] for w in weeks[max(0, i-6):i+1])
+            game_count = sum(w['games'] for w in weeks[max(0, i-WEEK_AVG):i+1])
+            game_total = sum(w['total'] for w in weeks[max(0, i-WEEK_AVG):i+1])
             weeks[i]['running_avg'] = game_total / float(game_count)
 
         return weeks
 
     def avg(self, before_date):
-        last_24 = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:24])
+        last = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:AVG_GAMES])
 
         # less than 4 games? default to average
-        if len(last_24) < 4:
+        if len(last) < 6:
             return 7
         else:
-            return float(sum([ps.score for ps in last_24])) / len(last_24)
+            return float(sum([ps.score for ps in last])) / len(last)
 
     def avg_17(self, before_date):
-        last_24 = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:24])
+        last = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:AVG_GAMES])
 
         # less than 4 games? default to average
-        if len(last_24) < 4:
+        if len(last) < 4:
             return 10
         else:
             q = Q(match_id__lt=0)
-            for score in last_24:
+            for score in last:
                 q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
 
-            last_24_opp = list(PlayerScore.objects.filter(q))
+            last_opp = list(PlayerScore.objects.filter(q))
 
-            points = sum([ps.score for ps in last_24])
-            opp_balls_left = sum([7 - ps.score if ps.score < 10 else 0 for ps in last_24_opp])
-            return float(points + opp_balls_left) / len(last_24)
+            points = sum([ps.score for ps in last])
+            opp_balls_left = sum([7 - ps.score if ps.score < 10 else 0 for ps in last_opp])
+            return float(points + opp_balls_left) / len(last)
 
     def set_season(self, season):
         self.season = season
 
-        # get last 24 games
-        last_24 = list(PlayerScore.objects.filter(player=self).order_by('-match__date')[:24])
+        # get last games
+        last = list(PlayerScore.objects.filter(player=self).order_by('-match__date')[:AVG_GAMES])
 
-        self.wins = sum([1 if ps.score == 10 else 0 for ps in last_24])
-        self.losses = sum([1 if ps.score < 10 else 0 for ps in last_24])
+        self.wins = sum([1 if ps.score == 10 else 0 for ps in last])
+        self.losses = sum([1 if ps.score < 10 else 0 for ps in last])
 
-        self.games = len(last_24)
-        self.points = sum([ps.score for ps in last_24])
+        self.games = len(last)
+        self.points = sum([ps.score for ps in last])
 
         self.avg = float(self.points) / self.games if self.games > 0 else 0
 
         q = Q(match_id__lt=0)
-        for score in last_24:
+        for score in last:
             q |= (Q(match=score.match, game=score.game) & ~Q(player=self))
 
-        last_24_opp = list(PlayerScore.objects.filter(q))
+        last_opp = list(PlayerScore.objects.filter(q))
 
-        self.opponent_points = sum([ps.score for ps in last_24_opp])
+        self.opponent_points = sum([ps.score for ps in last_opp])
         self.mpg = float(self.points - self.opponent_points) / self.games if self.games > 0 else 0
 
     def games(self):

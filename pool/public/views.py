@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from pool.league.models import Season, Player, Match, Team
+from pool.league.models import Season, Player, Match, Team, AVG_GAMES
 
 def index(request):
     season = Season.objects.all().order_by('-start_date').first()
@@ -15,7 +15,7 @@ def index(request):
     players = sorted(players, key=lambda p: p.avg, reverse=True)
     matches = Match.objects.filter(season=season).order_by('date')
 
-    context = dict(season=season, players=players, matches=matches, teams=teams)
+    context = dict(season=season, players=players, matches=matches, teams=teams, avg_count=AVG_GAMES)
     return render(request, 'index.html', context)
 
 def player(request, player_id):
