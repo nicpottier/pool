@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Avg, Sum, Q
 
 WEEK_AVG = 8
-AVG_GAMES = 48
+AVG_GAMES = 72
 
 class Player(SmartModel):
     name = models.CharField(max_length=128,
@@ -66,18 +66,18 @@ class Player(SmartModel):
     def avg(self, before_date):
         last = list(PlayerScore.objects.filter(match__date__lt=before_date, player=self).order_by('-match__date')[:AVG_GAMES])
 
-        # less than 4 games? default to average
+        # less than 6 games? default to average
         if len(last) < 6:
             return 7
         else:
             # build up our scores and sort them
             scores = sorted([ps.score for ps in last])
 
-            # figure out our quartile size
-            quartile = last.count() / 4
+            # figure out our eighth size
+            eighth = len(scores) / 8
 
             # strip off the top and bottom quartile
-            scores = scores[quartile:-quartile]
+            scores = scores[eighth:-eighth]
 
             return float(sum(scores)) / len(scores)
 
@@ -97,11 +97,11 @@ class Player(SmartModel):
         scores = sorted([ps.score for ps in last])
 
         # figure out our quartile size
-        quartile = len(scores) / 4 if len(scores) > 0 else 0
+        eighth = len(scores) / 8 if len(scores) > 0 else 0
 
         # strip off the top and bottom quartile
-        scores = scores[quartile:-quartile]
-        self.avg = float(sum(scores)) / len(scores) if self.games > 0 else 0
+        scores = scores[eighth:-eighth]
+        self.avg = float(sum(scores)) / len(scores) if len(scores) > 0 else 0
 
         q = Q(match_id__lt=0)
         for score in last:
