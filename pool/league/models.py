@@ -79,7 +79,7 @@ class Player(SmartModel):
             # strip off the top and bottom quartile
             scores = scores[eighth:-eighth]
 
-            return float(sum(scores)) / len(scores)
+            return float(sum(scores)) / len(scores) if len(scores) > 0 else 0
 
     def set_season(self, season):
         self.season = season
